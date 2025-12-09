@@ -3,7 +3,6 @@ import { Calendar, ArrowLeft, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import Spinner from "../Layout/Spinner";
 import useAlertStore from "../../store/alertStore";
-import useAuthStore from "../../store/authStore";
 import api from "../../api/api";
 
 const FinancialYears = () => {

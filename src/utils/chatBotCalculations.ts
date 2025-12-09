@@ -316,7 +316,7 @@ export const calculateRatios = (totals: Totals, averages?: Partial<{
   const receivablesTurnover = (averages && averages.avgReceivables) ? ratioSafe(rev, averages.avgReceivables) : null;
   const payablesTurnover = (averages && averages.avgPayables) ? ratioSafe(safe(totals.cogs), averages.avgPayables) : null;
 
-  const workingCapital = safe(totals.currentAssets) - safe(totals.currentLiabilities);
+  //const workingCapital = safe(totals.currentAssets) - safe(totals.currentLiabilities);
   const workingCapitalTurnover = (averages && averages.avgWorkingCapital) ? ratioSafe(rev, averages.avgWorkingCapital) : null;
 
   // operating cycle days: inventory days + receivable days (if turnover available)
@@ -436,7 +436,7 @@ export const generateBotReply = (
   const text = (userMessage || '').toLowerCase();
 
   const netIncome = safe(totals.netProfit);
-  const { currentRatio, debtToEquity, assetTurnover, ROA, ROE, operatingMargin, netProfitMargin, cashRatio } = ratios;
+  const { currentRatio, debtToEquity, assetTurnover, operatingMargin, netProfitMargin, cashRatio } = ratios;
 
   if (text.includes('health score') || text.includes('overall')) {
     const status = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Good' : healthScore >= 40 ? 'Fair' : 'Poor';
