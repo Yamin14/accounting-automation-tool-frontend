@@ -74,14 +74,14 @@ const Budget = () => {
             favorableWhen: "higher",
             applyInflation: false
         },
-        {
-            label: "Capex",
-            budgeted: applyInflation(budget.capex?.budgetedAmount || 0),
-            actual: Math.abs(totals.netFixedAssets),
-            icon: <TrendingDown className="w-5 h-5" />,
-            favorableWhen: "lower",
-            applyInflation: true
-        },
+        // {
+        //     label: "Capex",
+        //     budgeted: applyInflation(budget.capex?.budgetedAmount || 0),
+        //     actual: Math.abs(totals.netFixedAssets),
+        //     icon: <TrendingDown className="w-5 h-5" />,
+        //     favorableWhen: "lower",
+        //     applyInflation: true
+        // },
         {
             label: "Cash Inflows",
             budgeted: budget.cashInflows?.budgetedAmount || 0,
@@ -160,7 +160,7 @@ const Budget = () => {
 
                     {adjustForInflation && (
                         <p className="text-sm text-gray-600 italic">
-                            Inflation applied annually to: <strong>Revenue, COGS, Operating Expenses, CapEx</strong>
+                            Inflation applied annually to: <strong>Revenue, COGS, Operating Expenses</strong>
                         </p>
                     )}
                 </div>
@@ -198,7 +198,7 @@ const Budget = () => {
                                                     case "COGS": return budget.cogs?.budgetedAmount || 0;
                                                     case "Operating Expenses": return budget.operatingExpenses?.budgetedAmount || 0;
                                                     case "Net Income": return budget.netIncome?.budgetedAmount || 0;
-                                                    case "Capex": return budget.capex?.budgetedAmount || 0;
+                                                    // case "Capex": return budget.capex?.budgetedAmount || 0;
                                                     case "Cash Inflows": return budget.cashInflows?.budgetedAmount || 0;
                                                     case "Cash Outflows": return budget.cashOutflows?.budgetedAmount || 0;
                                                     default: return 0;
@@ -280,10 +280,10 @@ const Budget = () => {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div>
+                                    {/* <div>
                                         <h4 className="font-semibold text-gray-800 mb-1">Capex</h4>
                                         <p className="text-sm leading-relaxed">Total net fixed assets used (proxy until direct tracking)</p>
-                                    </div>
+                                    </div> */}
                                     <div>
                                         <h4 className="font-semibold text-gray-800 mb-1">Cash Inflows / Outflows</h4>
                                         <p className="text-sm leading-relaxed">-</p>

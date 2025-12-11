@@ -40,32 +40,34 @@ const ProfitLossStatement = () => {
         else if (sub.toLowerCase().includes("non")) totals.NonOperatingExpenses += amount;
         else totals.OperatingExpenses += amount;
       }
-
-      // Contra Revenue (Debit to Revenue)
-      if (
-        debitAccount.category === "Revenue" &&
-        debitAccount.financialStatement === "Income Statement"
-      ) {
-        const sub = debitAccount.subCategory ?? "Contra Revenue";
-        const acc = debitAccount.accountName;
-        if (!map[sub]) map[sub] = {};
-        map[sub][acc] = (map[sub][acc] || 0) + amount;
-        if (sub === "Contra Revenue") totals.ContraRevenue += amount;
-      }
-
-      // Revenue (Credit)
+      
+      // 1. Credit to Revenue → Normal sales = increase revenue
       if (
         creditAccount.category === "Revenue" &&
         creditAccount.financialStatement === "Income Statement"
       ) {
-        const sub = creditAccount.subCategory ?? "Other Revenue";
-        const acc = creditAccount.accountName;
+        const sub = creditAccount.subCategory ?? "Revenue";
+        const accName = creditAccount.accountName;
+
         if (!map[sub]) map[sub] = {};
-        map[sub][acc] = (map[sub][acc] || 0) + amount;
+        map[sub][accName] = (map[sub][accName] || 0) + amount;
 
         if (sub === "Revenue") totals.Revenue += amount;
-        else if (sub.includes("Interest Income")) totals.FinanceIncome += amount;
-        else if (sub.toLowerCase().includes("non")) totals.NonOperatingRevenue += amount;
+        // ... handle Interest Income, Non-op, etc.
+      }
+
+      // 2. Debit to Revenue → Reduce revenue directly (returns, corrections, reversals)
+      if (
+        debitAccount.category === "Revenue" &&
+        debitAccount.financialStatement === "Income Statement"
+      ) {
+        const sub = debitAccount.subCategory ?? "Revenue"; 
+        const accName = debitAccount.accountName;
+
+        if (!map[sub]) map[sub] = {};
+        map[sub][accName] = (map[sub][accName] || 0) - amount;
+
+        totals.Revenue -= amount;
       }
     }
 
@@ -94,9 +96,8 @@ const ProfitLossStatement = () => {
 
   const TotalLine = ({ label, amount, bold = true, underline = false }: { label: string; amount: number; bold?: boolean; underline?: boolean }) => (
     <div
-      className={`flex justify-between py-2 ${bold ? "font-bold" : "font-medium"} ${
-        underline ? "border-t-2 border-gray-800" : ""
-      }`}
+      className={`flex justify-between py-2 ${bold ? "font-bold" : "font-medium"} ${underline ? "border-t-2 border-gray-800" : ""
+        }`}
     >
       <span className="text-gray-900">{label}</span>
       <span className="text-gray-900">PKR {Math.abs(amount).toLocaleString()}</span>
