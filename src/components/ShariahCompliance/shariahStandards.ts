@@ -58,7 +58,7 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         value: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) * 100 : null,
         pass: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) < 0.05 : true,
         na: !(t.interestIncome !== undefined && t.revenue),
-        description: 'Using Interest Income',
+        description: 'Using Interest Income as proxy for non-compliant income',
       },
       {
         name: 'Illiquid Assets to Total Assets',
@@ -71,8 +71,8 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
     ],
     notes: 'Market Price > Net Liquid Assets per Share check requires share data.',
     assumptions: [
-      'Non-compliant investments are approximated using totals.interestIncome (as proxy).',
-      'Non-compliant income is approximated using totals.interestIncome (as proxy for impure income).',
+      'Non-compliant investments are approximated using net fixed assets (as proxy).',
+      'Non-compliant income is approximated using interest income (as proxy for impure income).',
     ],
   },
   secMalaysia: {
