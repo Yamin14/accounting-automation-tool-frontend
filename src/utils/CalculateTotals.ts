@@ -29,6 +29,7 @@ export const calculateTotals = (entries: JournalEntry[]) => {
         capitalEmployed: 0,
         totalInvestment: 0,
         interestExpense: 0,
+        interestIncome: 0,
         cashAndCashEquivalents: 0,
         inventory: 0,
         accountsReceivable: 0,
@@ -38,7 +39,7 @@ export const calculateTotals = (entries: JournalEntry[]) => {
         netCreditSales: 0,
         netCreditPurchases: 0,
         cashInflows: 0,
-        cashOutflows: 0,
+        cashOutflows: 0
     };
 
     for (const entry of entries) {
@@ -187,6 +188,15 @@ export const calculateTotals = (entries: JournalEntry[]) => {
         }
         if (creditAccount.subCategory.includes('Operating Expense')) {
             totals.operatingExpenses -= amount;
+        }
+
+        // interest income
+        if ((creditAccount.accountName.toLocaleLowerCase().includes("finance income") || creditAccount.accountName.toLocaleLowerCase().includes("interest income")) && creditAccount.category === 'Revenue') {
+            totals.interestIncome += amount;
+        }
+
+        if ((debitAccount.accountName.toLocaleLowerCase().includes("finance income") || debitAccount.accountName.toLocaleLowerCase().includes("interest income")) && debitAccount.category === 'Revenue') {
+            totals.interestIncome -= amount;
         }
 
         // cash inflows / outflows

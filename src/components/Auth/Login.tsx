@@ -28,6 +28,7 @@ const Login = () => {
       nav('/');
 
     } catch (error) {
+      console.log(error)
       addAlert("Login failed", 'error');
       nav('/auth/login');
     } finally {

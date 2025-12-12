@@ -14,13 +14,31 @@ const ShariahCompliance: React.FC = () => {
   const { totals } = useCalculationsStore();
   const [selectedStandard, setSelectedStandard] = useState<ShariahStandardKey>(defaultStandard);
 
-  const standard = shariahStandards[selectedStandard];
-  const criteria = useMemo(() => standard.financialCriteria(totals), [standard, totals]);
+  // New inputs for manual Market Capitalization
+  const [marketPricePerShare, setMarketPricePerShare] = useState<string>('');
+  const [outstandingShares, setOutstandingShares] = useState<string>('');
 
-  const passedCount = criteria.filter(c => c.pass).length;
-  const totalFinancial = criteria.length;
-  const allPassed = passedCount === totalFinancial;
-  const compliancePercentage = Math.round((passedCount / totalFinancial) * 100);
+  const marketCap = useMemo(() => {
+    const mps = parseFloat(marketPricePerShare);
+    const shares = parseFloat(outstandingShares);
+    if (!isNaN(mps) && !isNaN(shares) && mps > 0 && shares > 0) {
+      return mps * shares;
+    }
+    return null;
+  }, [marketPricePerShare, outstandingShares]);
+
+  const standard = shariahStandards[selectedStandard];
+  const criteria = useMemo(
+    () => standard.financialCriteria(totals, marketCap),
+    [standard, totals, marketCap]
+  );
+
+  // Updated counting logic: N/A (value === null) is neutral → counts as 0 deduction
+  const validCriteria = criteria.filter(c => c.value !== null);
+  const passedCount = validCriteria.filter(c => c.pass).length;
+  const totalValid = validCriteria.length;
+  const allPassed = totalValid > 0 && passedCount === totalValid;
+  const compliancePercentage = totalValid > 0 ? Math.round((passedCount / totalValid) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
@@ -60,19 +78,68 @@ const ShariahCompliance: React.FC = () => {
           </div>
         </div>
 
-        {/* Compliance Summary Card – Big & Beautiful */}
+        {/* Manual Market Cap Inputs (only shown when needed) */}
+        {selectedStandard === 'dowJones' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
+            <h3 className="text-lg font-semibold text-amber-900 mb-4">
+              Manual Market Capitalization Input (Required for Dow Jones)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-amber-800 mb-1">
+                  Market Price per Share (MPS)
+                </label>
+                <input
+                  type="number"
+                  value={marketPricePerShare}
+                  onChange={(e) => setMarketPricePerShare(e.target.value)}
+                  placeholder="e.g., 45.50"
+                  className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-amber-800 mb-1">
+                  Number of Outstanding Shares
+                </label>
+                <input
+                  type="number"
+                  value={outstandingShares}
+                  onChange={(e) => setOutstandingShares(e.target.value)}
+                  placeholder="e.g., 250000000"
+                  className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+              <div className="flex items-end">
+                <div className="w-full bg-amber-100 px-4 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-amber-900">Market Cap:</span>
+                  <span className="ml-2 text-lg font-bold text-amber-900">
+                    {marketCap !== null ? `$${marketCap.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : '—'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-amber-700">
+              Market Capitalization = MPS × Outstanding Shares. Required for accurate Dow Jones screening.
+            </p>
+          </div>
+        )}
+
+        {/* Compliance Summary Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/30 overflow-hidden mb-10">
           <div className="p-8 lg:p-12">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
               <div className="max-w-2xl">
                 <h2 className="text-3xl font-bold text-gray-900">Compliance Result</h2>
                 <p className="mt-3 text-lg text-gray-600">
-                  {passedCount} out of {totalFinancial} financial screening criteria passed
+                  {passedCount} out of {totalValid} evaluable financial criteria passed
+                  {criteria.length > totalValid && ` (${criteria.length - totalValid} N/A – treated as neutral)`}
                 </p>
               </div>
-              <div className={`p-8 rounded-2xl shadow-md ${allPassed ? 'bg-green-50' : 'bg-red-50'}`}>
+              <div className={`p-8 rounded-2xl shadow-md ${allPassed ? 'bg-green-50' : totalValid === 0 ? 'bg-gray-50' : 'bg-red-50'}`}>
                 {allPassed ? (
                   <CheckCircle2 className="h-16 w-16 text-green-600" />
+                ) : totalValid === 0 ? (
+                  <AlertCircle className="h-16 w-16 text-gray-600" />
                 ) : (
                   <XCircle className="h-16 w-16 text-red-600" />
                 )}
@@ -83,10 +150,14 @@ const ShariahCompliance: React.FC = () => {
               <div className="flex items-end justify-between mb-6">
                 <div>
                   <span className="text-6xl font-bold text-gray-900">{compliancePercentage}</span>
-                  <span className={`text-3xl font-semibold ml-3 ${allPassed ? 'text-green-600' : 'text-red-600'}`}>%</span>
+                  <span className={`text-3xl font-semibold ml-3 ${allPassed ? 'text-green-600' : totalValid === 0 ? 'text-gray-600' : 'text-red-600'}`}>%</span>
                 </div>
-                <span className={`px-8 py-4 rounded-full text-xl font-bold ${allPassed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                  {allPassed ? 'Shariah Compliant' : 'Not Compliant'}
+                <span className={`px-8 py-4 rounded-full text-xl font-bold ${
+                  allPassed ? 'bg-green-50 text-green-700' :
+                  totalValid === 0 ? 'bg-gray-50 text-gray-700' :
+                  'bg-red-50 text-red-700'
+                }`}>
+                  {allPassed ? 'Shariah Compliant' : totalValid === 0 ? 'Insufficient Data' : 'Not Compliant'}
                 </span>
               </div>
 
@@ -95,6 +166,8 @@ const ShariahCompliance: React.FC = () => {
                   className={`h-6 rounded-full transition-all duration-1000 ease-out shadow-lg ${
                     allPassed
                       ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                      : totalValid === 0
+                      ? 'bg-gradient-to-r from-gray-400 to-gray-600'
                       : 'bg-gradient-to-r from-red-500 to-pink-600'
                   }`}
                   style={{ width: `${compliancePercentage}%` }}
@@ -104,9 +177,9 @@ const ShariahCompliance: React.FC = () => {
           </div>
         </div>
 
-        {/* Business Activity Rules (if any) */}
+        {/* Business Activity Rules */}
         {standard.businessActivityRules && standard.businessActivityRules.length > 0 && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-8 mb-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Business Activity Requirements</h2>
             <ul className="space-y-4">
               {standard.businessActivityRules.map((rule, i) => (
@@ -124,56 +197,86 @@ const ShariahCompliance: React.FC = () => {
           </div>
         )}
 
-        {/* Financial Criteria Grid – Premium Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {criteria.map((crit, i) => (
-            <div
-              key={i}
-              className="group bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <div className={`p-3.5 rounded-xl shadow-sm ${crit.pass ? 'bg-green-50' : 'bg-red-50'}`}>
-                    {crit.pass ? (
-                      <CheckCircle2 className="h-7 w-7 text-green-600" />
-                    ) : (
-                      <XCircle className="h-7 w-7 text-red-600" />
-                    )}
+        {/* Financial Criteria Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">
+          {criteria.map((crit, i) => {
+            const isNA = crit.value === null;
+            return (
+              <div
+                key={i}
+                className="group bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className={`p-3.5 rounded-xl shadow-sm ${
+                      isNA ? 'bg-gray-50' : crit.pass ? 'bg-green-50' : 'bg-red-50'
+                    }`}>
+                      {isNA ? (
+                        <AlertCircle className="h-7 w-7 text-gray-500" />
+                      ) : crit.pass ? (
+                        <CheckCircle2 className="h-7 w-7 text-green-600" />
+                      ) : (
+                        <XCircle className="h-7 w-7 text-red-600" />
+                      )}
+                    </div>
+                    <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${
+                      isNA 
+                        ? 'bg-gray-100 text-gray-600 border-gray-300'
+                        : crit.pass 
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-red-100 text-red-700 border-red-200'
+                    }`}>
+                      {isNA ? 'N/A' : crit.pass ? 'Pass' : 'Fail'}
+                    </span>
                   </div>
-                  <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${crit.pass ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
-                    {crit.pass ? 'Pass' : 'Fail'}
-                  </span>
-                </div>
 
-                <h3 className="text-sm font-semibold text-gray-600 mb-2">{crit.name}</h3>
-                <p className="text-2xl font-bold text-gray-900">
-                  {crit.value !== null ? `${crit.value.toFixed(2)}%` : 'N/A'}
-                </p>
-
-                <div className="mt-4 space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Threshold:</span>
-                    <span className="font-medium text-gray-900">{crit.threshold}</span>
-                  </div>
-                  <div className="text-gray-500">
-                    <span>Formula:</span>{' '}
-                    <code className="font-mono bg-gray-100 px-2 py-1 rounded">{crit.formula}</code>
-                  </div>
-                </div>
-
-                {crit.description && (
-                  <p className="mt-4 text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
-                    {crit.description}
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">{crit.name}</h3>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {isNA ? 'N/A' : `${crit.value?.toFixed(2)}%`}
                   </p>
-                )}
 
-                <div className={`mt-4 h-1 rounded-full ${crit.pass ? 'bg-green-200' : 'bg-red-200'}`} />
+                  <div className="mt-4 space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Threshold:</span>
+                      <span className="font-medium text-gray-900">{crit.threshold}</span>
+                    </div>
+                    <div className="text-gray-500">
+                      <span>Formula:</span>{' '}
+                      <code className="font-mono bg-gray-100 px-2 py-1 rounded">{crit.formula}</code>
+                    </div>
+                  </div>
+
+                  {crit.description && (
+                    <p className="mt-4 text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
+                      {crit.description}
+                    </p>
+                  )}
+
+                  <div className={`mt-4 h-1 rounded-full ${
+                    isNA ? 'bg-gray-200' : crit.pass ? 'bg-green-200' : 'bg-red-200'
+                  }`} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Reference + CTA */}
+        {/* Assumptions Section (only for standards that have it) */}
+        {standard.assumptions && standard.assumptions.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 mb-10">
+            <h3 className="text-xl font-bold text-blue-900 mb-4">Assumptions & Proxies Used</h3>
+            <ul className="space-y-3">
+              {standard.assumptions.map((assumption, i) => (
+                <li key={i} className="flex items-start gap-3 text-blue-800">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-base">{assumption}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Reference */}
         <div className="text-center mt-16 space-y-8">
           <p className="text-sm text-gray-600">
             Screening based on:{' '}

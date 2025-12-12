@@ -9,6 +9,7 @@ export interface ScreeningCriterion {
   value: number | null;
   pass: boolean;
   description?: string;
+  na?: boolean; // Added to flag N/A criteria
 }
 
 export interface ShariahStandard {
@@ -17,8 +18,9 @@ export interface ShariahStandard {
   referenceName: string;
   referenceUrl?: string;
   businessActivityRules?: string[];
-  financialCriteria: ((totals: ReturnType<typeof calculateTotals>) => ScreeningCriterion[]);
+  financialCriteria: ((totals: ReturnType<typeof calculateTotals>, marketCap: number | null) => ScreeningCriterion[]);
   notes?: string;
+  assumptions?: string[]; // Added for the assumptions section
 }
 
 export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
@@ -37,33 +39,41 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         formula: 'Interest-Bearing Debt ÷ Total Assets',
         threshold: '< 37%',
         value: t.totalDebt && t.assets ? (t.totalDebt / t.assets) * 100 : null,
-        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) < 0.37 : false,
+        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) < 0.37 : true,
+        na: !(t.totalDebt && t.assets),
       },
       {
         name: 'Non-Compliant Investments to Total Assets',
         formula: 'Non-Compliant Investments ÷ Total Assets',
         threshold: '< 33%',
-        value: null,
-        pass: false,
-        description: 'Requires manual input (e.g., interest-bearing securities)',
+        value: t.interestIncome !== undefined && t.assets ? (t.interestIncome / t.assets) * 100 : null,
+        pass: t.interestIncome !== undefined && t.assets ? (t.interestIncome / t.assets) < 0.33 : true,
+        na: !(t.interestIncome !== undefined && t.assets),
+        description: 'Using interestIncome as temporary proxy',
       },
       {
         name: 'Non-Compliant Income to Total Revenue',
         formula: 'Non-Compliant Income ÷ Total Revenue',
         threshold: '< 5%',
-        value: null,
-        pass: false,
-        description: 'Requires manual input of impure income',
+        value: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) * 100 : null,
+        pass: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) < 0.05 : true,
+        na: !(t.interestIncome !== undefined && t.revenue),
+        description: 'Using interestIncome as temporary proxy',
       },
       {
         name: 'Illiquid Assets to Total Assets',
         formula: '(Fixed Assets + Inventory) ÷ Total Assets',
         threshold: '≥ 25%',
         value: t.assets ? ((t.netFixedAssets + t.inventory) / t.assets) * 100 : null,
-        pass: t.assets ? ((t.netFixedAssets + t.inventory) / t.assets) >= 0.25 : false,
+        pass: t.assets ? ((t.netFixedAssets + t.inventory) / t.assets) >= 0.25 : true,
+        na: !t.assets,
       },
     ],
     notes: 'Market Price > Net Liquid Assets per Share check requires share data.',
+    assumptions: [
+      'Non-compliant investments are approximated using totals.interestIncome (as proxy).',
+      'Non-compliant income is approximated using totals.interestIncome (as proxy for impure income).',
+    ],
   },
   secMalaysia: {
     id: 'secMalaysia',
@@ -80,14 +90,16 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         formula: 'Total Debt ÷ Total Assets',
         threshold: '≤ 33%',
         value: t.totalDebt && t.assets ? (t.totalDebt / t.assets) * 100 : null,
-        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) <= 0.33 : false,
+        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) <= 0.33 : true,
+        na: !(t.totalDebt && t.assets),
       },
       {
         name: 'Cash + Interest-Bearing Securities to Total Assets',
         formula: '(Cash + Interest Securities) ÷ Total Assets',
         threshold: '≤ 33%',
         value: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) * 100 : null,
-        pass: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) <= 0.33 : false,
+        pass: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) <= 0.33 : true,
+        na: !(t.cashAndCashEquivalents && t.assets),
         description: 'Using Cash as proxy (interest-bearing securities not tracked)',
       },
     ],
@@ -97,28 +109,32 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
     name: 'S&P Dow Jones Shariah',
     referenceName: 'S&P Dow Jones Islamic Market Indices',
     businessActivityRules: ['≤5% revenue from alcohol, pork, gambling, tobacco, conventional finance, etc.'],
-    financialCriteria: () => [
+    financialCriteria: (t: ReturnType<typeof calculateTotals>, marketCap: number | null) => [
       {
         name: 'Total Debt to Market Cap',
         formula: 'Total Debt ÷ Market Capitalization',
         threshold: '≤ 33%',
-        value: null,
-        pass: false,
-        description: 'Requires Market Cap (not available from ledger)',
+        value: marketCap != null ? (t.totalDebt / marketCap) * 100 : null,
+        pass: marketCap != null ? (t.totalDebt / marketCap) <= 0.33 : true,
+        na: marketCap == null,
+        description: marketCap == null ? 'Requires manual Market Capitalization' : undefined,
       },
       {
         name: '(Cash + Interest Securities) to Market Cap',
         formula: '(Cash + Interest Securities) ÷ Market Cap',
         threshold: '≤ 33%',
-        value: null,
-        pass: false,
+        value: marketCap != null ? (t.cashAndCashEquivalents / marketCap) * 100 : null,
+        pass: marketCap != null ? (t.cashAndCashEquivalents / marketCap) <= 0.33 : true,
+        na: marketCap == null,
+        description: 'Using Cash as proxy for interest-bearing deposits',
       },
       {
         name: 'Accounts Receivable to Market Cap',
         formula: 'Accounts Receivable ÷ Market Cap',
         threshold: '≤ 49%',
-        value: null,
-        pass: false,
+        value: marketCap != null && t.accountsReceivable != null ? (t.accountsReceivable / marketCap) * 100 : null,
+        pass: marketCap != null && t.accountsReceivable != null ? (t.accountsReceivable / marketCap) <= 0.49 : true,
+        na: marketCap == null || t.accountsReceivable == null,
       },
     ],
   },
@@ -132,21 +148,24 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         formula: 'Total Debt ÷ Total Assets',
         threshold: '≤ 33.33%',
         value: t.totalDebt && t.assets ? (t.totalDebt / t.assets) * 100 : null,
-        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) <= 0.3333 : false,
+        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) <= 0.3333 : true,
+        na: !(t.totalDebt && t.assets),
       },
       {
         name: '(Cash + Interest Securities) to Total Assets',
         formula: '(Cash + Interest Securities) ÷ Total Assets',
         threshold: '≤ 33.33%',
         value: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) * 100 : null,
-        pass: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) <= 0.3333 : false,
+        pass: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) <= 0.3333 : true,
+        na: !(t.cashAndCashEquivalents && t.assets),
       },
       {
         name: 'Accounts Receivable to Total Assets',
         formula: 'Accounts Receivable ÷ Total Assets',
         threshold: '≤ 33.33%',
         value: t.accountsReceivable && t.assets ? (t.accountsReceivable / t.assets) * 100 : null,
-        pass: t.accountsReceivable && t.assets ? (t.accountsReceivable / t.assets) <= 0.3333 : false,
+        pass: t.accountsReceivable && t.assets ? (t.accountsReceivable / t.assets) <= 0.3333 : true,
+        na: !(t.accountsReceivable && t.assets),
       },
     ],
   },
@@ -162,21 +181,24 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         formula: 'Total Debt ÷ Total Assets',
         threshold: '< 33%',
         value: t.totalDebt && t.assets ? (t.totalDebt / t.assets) * 100 : null,
-        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) < 0.33 : false,
+        pass: t.totalDebt && t.assets ? (t.totalDebt / t.assets) < 0.33 : true,
+        na: !(t.totalDebt && t.assets),
       },
       {
         name: '(Cash + Interest Securities) to Total Assets',
         formula: '(Cash + Interest Securities) ÷ Total Assets',
         threshold: '< 33%',
         value: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) * 100 : null,
-        pass: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) < 0.33 : false,
+        pass: t.cashAndCashEquivalents && t.assets ? (t.cashAndCashEquivalents / t.assets) < 0.33 : true,
+        na: !(t.cashAndCashEquivalents && t.assets),
       },
       {
         name: '(Receivables + Cash) to Total Assets',
         formula: '(Receivables + Cash) ÷ Total Assets',
         threshold: '< 50%',
         value: t.assets ? ((t.accountsReceivable + t.cashAndCashEquivalents) / t.assets) * 100 : null,
-        pass: t.assets ? ((t.accountsReceivable + t.cashAndCashEquivalents) / t.assets) < 0.50 : false,
+        pass: t.assets && t.accountsReceivable !== undefined && t.cashAndCashEquivalents !== undefined ? ((t.accountsReceivable + t.cashAndCashEquivalents) / t.assets) < 0.50 : true,
+        na: !t.assets || t.accountsReceivable === undefined || t.cashAndCashEquivalents === undefined,
       },
     ],
     notes: 'Minor interest income must be purified.',
