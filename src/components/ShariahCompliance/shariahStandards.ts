@@ -46,10 +46,10 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         name: 'Non-Compliant Investments to Total Assets',
         formula: 'Non-Compliant Investments ÷ Total Assets',
         threshold: '< 33%',
-        value: t.interestIncome !== undefined && t.assets ? (t.interestIncome / t.assets) * 100 : null,
-        pass: t.interestIncome !== undefined && t.assets ? (t.interestIncome / t.assets) < 0.33 : true,
-        na: !(t.interestIncome !== undefined && t.assets),
-        description: 'Using interestIncome as temporary proxy',
+        value: t.netFixedAssets !== undefined && t.assets ? (t.netFixedAssets / t.assets) * 100 : null,
+        pass: t.netFixedAssets !== undefined && t.assets ? (t.netFixedAssets / t.assets) < 0.33 : true,
+        na: !(t.netFixedAssets !== undefined && t.assets),
+        description: 'Using Net Fixed Assets as temporary proxy',
       },
       {
         name: 'Non-Compliant Income to Total Revenue',
@@ -58,7 +58,7 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         value: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) * 100 : null,
         pass: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) < 0.05 : true,
         na: !(t.interestIncome !== undefined && t.revenue),
-        description: 'Using interestIncome as temporary proxy',
+        description: 'Using Interest Income',
       },
       {
         name: 'Illiquid Assets to Total Assets',
