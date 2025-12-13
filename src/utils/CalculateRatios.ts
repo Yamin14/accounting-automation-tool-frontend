@@ -81,7 +81,8 @@ export const calculateRatios = (totals: ReturnType<typeof calculateTotals>): Rat
     if (inventoryTurnover && receivablesTurnover) {
         const inventoryPeriod = 365 / inventoryTurnover;
         const receivablesPeriod = 365 / receivablesTurnover;
-        operatingCycle = inventoryPeriod + receivablesPeriod;
+        const payablesPeriod = payablesTurnover !== null ? 365 / payablesTurnover : 0;
+        operatingCycle = inventoryPeriod + receivablesPeriod - payablesPeriod;
     }
 
     return {

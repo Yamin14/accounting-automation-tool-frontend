@@ -58,7 +58,7 @@ export const ratioDescriptions: Record<string, { title: string; description: str
     assetTurnover: { title: 'Asset Turnover', description: 'Measures how efficiently the company uses its total assets to generate sales.', formula: 'Net Sales / Average Total Assets' },
     fixedAssetTurnover: { title: 'Fixed Asset Turnover', description: 'Indicates how effectively fixed assets are used to generate sales.', formula: 'Net Sales / Average Net Fixed Assets' },
     workingCapitalTurnover: { title: 'Working Capital Turnover', description: 'Shows how efficiently the company uses its working capital to generate revenue.', formula: 'Net Sales / Average Working Capital' },
-    operatingCycle: { title: 'Operating Cycle', description: "Measures the time it takes to convert inventory into cash; shorter cycles indicate better efficiency.", formula: 'Inventory Period + Receivables Collection Period' }
+    operatingCycle: { title: 'Operating Cycle', description: "Measures the time it takes to convert inventory into cash; shorter cycles indicate better efficiency.", formula: 'Inventory Period + Receivables Collection Period - Payables Payment Period' }
 };
 
 export const ratioOverview: Record<string, { title: string, description: string }> = {
