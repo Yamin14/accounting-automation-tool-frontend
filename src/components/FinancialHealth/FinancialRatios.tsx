@@ -72,6 +72,18 @@ const FinancialRatios: React.FC = () => {
         return catData;
     }, [category, ratios]);
 
+    const operatingCycle = useMemo(() => {
+        if (category !== 'efficiency') return null;
+
+        const e = ratios.efficiency;
+        const daysInventory = e.inventoryTurnover ? 365 / e.inventoryTurnover : null;
+        const daysReceivables = e.receivablesTurnover ? 365 / e.receivablesTurnover : null;
+
+        if (daysInventory === null || daysReceivables === null) return null;
+
+        return daysInventory + daysReceivables;
+    }, [category, ratios.efficiency]);
+
     const formatValue = (val: number | null) => {
         if (val === null || val === undefined) return '—';
         if (Math.abs(val) >= 1000) return val.toFixed(0);
@@ -244,6 +256,33 @@ const FinancialRatios: React.FC = () => {
                             </div>
                         );
                     })}
+
+                    {/* Operating Cycle – only when efficiency ratios are selected */}
+                    {category === 'efficiency' && operatingCycle !== null && (
+                        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-l-4 border-l-emerald-500">
+                            <div className="p-7">
+                                <div className="flex justify-between items-start mb-5">
+                                    <h3 className="text-lg font-bold text-gray-900 pr-4">
+                                        Operating Cycle
+                                    </h3>
+                                    <span className="text-2xl font-bold font-mono text-emerald-600">
+                                        {formatValue(operatingCycle)}
+                                    </span>
+                                </div>
+
+                                <p className="text-gray-600 text-base leading-relaxed mb-5">
+                                    The average number of days it takes to convert inventory into cash through sales and collections.
+                                </p>
+
+                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-4">
+                                    <p className="text-sm font-semibold text-emerald-800 mb-1">Formula</p>
+                                    <p className="text-sm font-mono text-emerald-700">
+                                        Days Inventory Outstanding + Days Sales Outstanding
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
