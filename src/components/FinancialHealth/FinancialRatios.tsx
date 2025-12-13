@@ -266,18 +266,18 @@ const FinancialRatios: React.FC = () => {
                                         Operating Cycle
                                     </h3>
                                     <span className="text-2xl font-bold font-mono text-emerald-600">
-                                        {formatValue(operatingCycle)}
+                                        {formatValue(ratios.efficiency.operatingCycle)}
                                     </span>
                                 </div>
 
                                 <p className="text-gray-600 text-base leading-relaxed mb-5">
-                                    The average number of days it takes to convert inventory into cash through sales and collections.
+                                    {ratioDescriptions.operatingCycle.description}    
                                 </p>
 
                                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-4">
                                     <p className="text-sm font-semibold text-emerald-800 mb-1">Formula</p>
                                     <p className="text-sm font-mono text-emerald-700">
-                                        Days Inventory Outstanding + Days Sales Outstanding
+                                        {ratioDescriptions.operatingCycle.formula}
                                     </p>
                                 </div>
                             </div>
