@@ -173,12 +173,10 @@ export const calculateTotals = (entries: JournalEntry[]) => {
         }
 
         // Operating Cash Flow (from operating activities in cash flow statement)
-        if (debitAccount.financialStatement === 'Cash Flow Statement' &&
-            debitAccount.cashFlowSection.toLowerCase().includes('operating')) {
+        if (debitAccount.cashFlowSection.toLowerCase().includes('operating')) {
             totals.operatingCashFlow += amount;
         }
-        if (creditAccount.financialStatement === 'Cash Flow Statement' &&
-            creditAccount.cashFlowSection.toLowerCase().includes('operating')) {
+        if (creditAccount.cashFlowSection.toLowerCase().includes('operating')) {
             totals.operatingCashFlow -= amount;
         }
 
