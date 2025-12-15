@@ -153,7 +153,7 @@ async function parseTransaction(prompt: string, user: any): Promise<ParsedTransa
     // Transfer: Find two distinct mentioned accounts
     const mentioned = accounts
       .filter((a: any) => fuzzyIncludes(promptLower, a.accountName.toLowerCase()))
-      .sort((a, b) => b.accountName.length - a.accountName.length);
+      .sort((a: any, b: any) => b.accountName.length - a.accountName.length);
 
     if (mentioned.length >= 2) {
       debitAccObj = mentioned[0];
@@ -176,7 +176,7 @@ async function parseTransaction(prompt: string, user: any): Promise<ParsedTransa
   if (!debitAccObj || !creditAccObj) {
     const mentioned = accounts
       .filter((a: any) => fuzzyIncludes(promptLower, a.accountName.toLowerCase()))
-      .sort((a, b) => b.accountName.length - a.accountName.length);
+      .sort((a: any, b: any) => b.accountName.length - a.accountName.length);
 
     if (mentioned.length >= 1) debitAccObj = debitAccObj || mentioned[0];
     if (mentioned.length >= 2) creditAccObj = creditAccObj || mentioned[1];
