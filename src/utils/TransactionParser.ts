@@ -44,7 +44,6 @@ async function parseTransaction(prompt: string, user: any): Promise<ParsedTransa
   let debitAccount = "Unknown Debit";
   let creditAccount = "Unknown Credit";
   let amount = 0;
-  let description = trimmedPrompt || "";
 
   if (!trimmedPrompt) {
     return {
