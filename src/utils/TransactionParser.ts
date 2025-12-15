@@ -29,7 +29,7 @@ function findBestMatch(promptLower: string, accounts: any[], filterFn?: (acc: an
 // Main parser
 async function parseTransaction(prompt: string, user: any) {
   if (!prompt.trim()) {
-    return { description: "", debitAccount: null, creditAccount: null, amount: 0, error: "Empty prompt" };
+    return { description: "", debitAccount: 'Unknown Debit', creditAccount: 'Unknown Credit', amount: 0, error: "Empty prompt" };
   }
 
   // Fetch accounts
