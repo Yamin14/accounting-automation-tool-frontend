@@ -26,7 +26,7 @@ async function parseTransaction(prompt: string, user: any) {
         creditAccount = acc.includes('Cash') || acc.includes('Bank') ? acc : creditAccount;
       } else if (/received|sold/.test(prompt.toLowerCase())) {
         debitAccount = acc.includes('Cash') || acc.includes('Bank') ? acc : debitAccount;
-        creditAccount = acc.includes('Sevenue') || acc.includes('Sales') ? acc : creditAccount;
+        creditAccount = acc.includes('Revenue') || acc.includes('Sales') ? acc : creditAccount;
       }
     }
   }
