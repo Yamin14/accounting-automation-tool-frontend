@@ -118,7 +118,7 @@ const Ledgers: React.FC = () => {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
-              {type === 'All' ? 'All Accounts' : `${type}s`}
+              {type === 'All' ? 'All Accounts' : `${type === 'Liability' ? 'Liabilities' : type === 'Equity' ? 'Equities' : type + 's'}`}
             </button>
           ))}
         </div>
