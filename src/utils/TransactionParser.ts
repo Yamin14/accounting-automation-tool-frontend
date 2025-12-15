@@ -34,114 +34,121 @@ interface ParsedTransaction {
   amount: number;
   debitAccount: string;
   creditAccount: string;
-  confidence: 'high' | 'medium' | 'low';
-  error?: string;
 }
 
 // Main parser
 async function parseTransaction(prompt: string, user: any): Promise<ParsedTransaction> {
   const trimmedPrompt = prompt.trim();
+
+  // Default fallback values
+  let debitAccount = "Unknown Debit";
+  let creditAccount = "Unknown Credit";
+  let amount = 0;
+  let description = trimmedPrompt || "";
+
   if (!trimmedPrompt) {
     return {
       description: "",
+      amount: 0,
       debitAccount: "Unknown Debit",
       creditAccount: "Unknown Credit",
-      amount: 0,
-      confidence: "low",
-      error: "Empty prompt",
     };
   }
 
-  // Fetch accounts
+  // Fetch accounts from backend
   const res = await api.get(`companies/${user.company._id}/accounts`);
   const accounts = res.data.accounts;
 
   if (!accounts || accounts.length === 0) {
     return {
       description: trimmedPrompt,
+      amount: 0,
       debitAccount: "Unknown Debit",
       creditAccount: "Unknown Credit",
-      amount: 0,
-      confidence: "low",
-      error: "No accounts found",
     };
   }
 
   const promptLower = trimmedPrompt.toLowerCase();
 
-  // Extract the most likely amount
+  // Extract amount: find all numbers (with optional $ and decimals), pick the largest
   const amountMatches = trimmedPrompt.matchAll(/\$?\s*(\d+(?:\.\d{1,2})?)/g);
   const amounts = Array.from(amountMatches, (m) => parseFloat(m[1]));
-  const amount = amounts.length > 0 ? Math.max(...amounts) : 0;
+  if (amounts.length > 0) {
+    amount = Math.max(...amounts);
+  }
 
   // Determine transaction type
   const isExpense = /paid|spent|bought|purchase|bill|invoice|expense|supplier|vendor|paid to|paid for/i.test(promptLower);
   const isIncome = /received|sold|sale|revenue|income|deposit|customer|client/i.test(promptLower);
   const isTransfer = /transfer|moved|from.*to|to.*from/i.test(promptLower);
 
-  let debitAccountName = "Unknown Debit";
-  let creditAccountName = "Unknown Credit";
-  let confidence: 'high' | 'medium' | 'low' = "low";
-
-  let debitAccObj = null;
-  let creditAccObj = null;
+  let debitAccObj: any | null = null;
+  let creditAccObj: any | null = null;
 
   if (isExpense) {
+    // Debit: Expense or Asset
     const expenseCandidates = accounts.filter((a: any) =>
       ["Expense", "Cost of Goods Sold", "Other Expense", "Asset"].includes(a.accountType)
     );
-    debitAccObj = findBestMatch(promptLower, expenseCandidates) ||
-                  findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Expense"));
+    debitAccObj =
+      findBestMatch(promptLower, expenseCandidates) ||
+      findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Expense"));
 
+    // Credit: Payment source (Bank, Credit Card, Accounts Payable, Cash)
     const paymentSources = accounts.filter((a: any) =>
       ["Bank", "Credit Card", "Accounts Payable"].includes(a.accountType) ||
       a.accountName.toLowerCase().includes("cash")
     );
-    creditAccObj = findBestMatch(promptLower, paymentSources) ||
-                   findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Bank"));
-
-  } else if (isIncome) {
+    creditAccObj =
+      findBestMatch(promptLower, paymentSources) ||
+      findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Bank"));
+  } 
+  else if (isIncome) {
+    // Debit: Cash/Bank
     const bankAccounts = accounts.filter((a: any) =>
       ["Bank", "Cash"].includes(a.accountType)
     );
-    debitAccObj = findBestMatch(promptLower, bankAccounts) ||
-                  findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Bank"));
+    debitAccObj =
+      findBestMatch(promptLower, bankAccounts) ||
+      findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Bank"));
 
+    // Credit: Revenue
     const revenueAccounts = accounts.filter((a: any) =>
       ["Revenue", "Income", "Sales", "Accounts Receivable"].includes(a.accountType)
     );
-    creditAccObj = findBestMatch(promptLower, revenueAccounts) ||
-                   findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Revenue"));
-
-  } else if (isTransfer) {
-    const mentioned = accounts.filter((a: any) => fuzzyIncludes(promptLower, a.accountName.toLowerCase()));
+    creditAccObj =
+      findBestMatch(promptLower, revenueAccounts) ||
+      findBestMatch(promptLower, accounts.filter((a: any) => a.accountType === "Revenue"));
+  } 
+  else if (isTransfer) {
+    // Try to match two mentioned accounts
+    const mentioned = accounts.filter((a: any) =>
+      fuzzyIncludes(promptLower, a.accountName.toLowerCase())
+    );
     if (mentioned.length >= 2) {
       debitAccObj = mentioned[0];
       creditAccObj = mentioned[1];
     }
   }
 
-  // Final fallback: any mentioned accounts
+  // Final fallback: any accounts mentioned in the prompt
   if (!debitAccObj || !creditAccObj) {
-    const allMatches = accounts.filter((a: any) => fuzzyIncludes(promptLower, a.accountName.toLowerCase()));
+    const allMatches = accounts.filter((a: any) =>
+      fuzzyIncludes(promptLower, a.accountName.toLowerCase())
+    );
     if (allMatches.length >= 1) debitAccObj = allMatches[0];
     if (allMatches.length >= 2) creditAccObj = allMatches[1];
   }
 
-  // Set names
-  if (debitAccObj) debitAccountName = debitAccObj.accountName;
-  if (creditAccObj) creditAccountName = creditAccObj.accountName;
-
-  // Update confidence
-  if (debitAccObj && creditAccObj) confidence = "high";
-  else if (debitAccObj || creditAccObj) confidence = "medium";
+  // Override defaults if we found real accounts
+  if (debitAccObj) debitAccount = debitAccObj.accountName;
+  if (creditAccObj) creditAccount = creditAccObj.accountName;
 
   return {
     description: trimmedPrompt,
     amount,
-    debitAccount: debitAccountName,
-    creditAccount: creditAccountName,
-    confidence,
+    debitAccount,
+    creditAccount,
   };
 }
 
