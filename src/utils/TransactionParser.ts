@@ -37,7 +37,7 @@ async function parseTransaction(prompt: string, user: any) {
   const accounts = res.data.accounts;
 
   if (!accounts || accounts.length === 0) {
-    return { description: prompt, debitAccount: null, creditAccount: null, amount: 0, error: "No accounts found" };
+    return { description: prompt, debitAccount: 'Unknown Debit', creditAccount: 'Unknown Credit', amount: 0, error: "No accounts found" };
   }
 
   const promptLower = prompt.toLowerCase();
