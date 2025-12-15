@@ -116,8 +116,8 @@ async function parseTransaction(prompt: string, user: any) {
   return {
     description: prompt.trim(),
     amount,
-    debitAccount: debitAccount ? { id: debitAccount._id, name: debitAccount.accountName } : null,
-    creditAccount: creditAccount ? { id: creditAccount._id, name: creditAccount.accountName } : null,
+    debitAccount: debitAccount ? { id: debitAccount._id, name: debitAccount.accountName } : 'Unknown Debit',
+    creditAccount: creditAccount ? { id: creditAccount._id, name: creditAccount.accountName } : 'Unknown Credit',
     confidence: debitAccount && creditAccount ? 'high' : debitAccount || creditAccount ? 'medium' : 'low'
   };
 }
