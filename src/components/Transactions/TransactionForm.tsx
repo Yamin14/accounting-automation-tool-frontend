@@ -51,7 +51,7 @@ const TransactionForm: React.FC<Props> = ({ mode, onParse, loading }) => {
         <form onSubmit={handleAI} className="space-y-4">
           <textarea
             className="w-full p-6 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none h-32 text-lg placeholder-gray-400 bg-white/50"
-            placeholder="e.g. Paid rent 2000"
+            placeholder="e.g. Received sales revenue 2000"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={loading}
