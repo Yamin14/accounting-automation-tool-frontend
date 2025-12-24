@@ -124,7 +124,7 @@ const Accounts = () => {
                   <th className="px-6 py-4 text-left text-sm font-semibold">Financial Statement</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Category</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Subcategory</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">Balance</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold">Balance (PKR)</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -146,7 +146,7 @@ const Accounts = () => {
                     <td className="px-6 py-4 text-sm text-gray-600">{account.category}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{account.subCategory}</td>
                     <td className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                      ${account.balance.toLocaleString()}
+                      {account.balance.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
                       {user.role === 'admin' &&

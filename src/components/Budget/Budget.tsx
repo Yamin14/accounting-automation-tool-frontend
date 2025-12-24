@@ -31,7 +31,7 @@ const Budget = () => {
 
     if (loading) return <Spinner />;
 
-    const fmt = (num: number) => `$${Math.abs(num).toLocaleString()}`;
+    const fmt = (num: number) => `${Math.abs(num).toLocaleString()}`;
 
     // Helper: Apply inflation compounding over years (assuming budget is for current or next year → 1-year forward adjustment)
     const applyInflation = (baseAmount: number) => {
@@ -183,9 +183,9 @@ const Budget = () => {
                                             <th className="px-8 py-6 text-right text-sm font-semibold text-gray-700">
                                                 Budget {adjustForInflation && "(Inflation-Adjusted)"}
                                             </th>
-                                            <th className="px-8 py-6 text-right text-sm font-semibold text-gray-700">Actual</th>
-                                            <th className="px-8 py-6 text-right text-sm font-semibold text-gray-700">Difference</th>
-                                            <th className="px-8 py-6 text-center text-sm font-semibold text-gray-700">Variance</th>
+                                            <th className="px-8 py-6 text-right text-sm font-semibold text-gray-700">Actual (PKR)</th>
+                                            <th className="px-8 py-6 text-right text-sm font-semibold text-gray-700">Difference (PKR)</th>
+                                            <th className="px-8 py-6 text-center text-sm font-semibold text-gray-700">Variance (PKR)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200/60">
