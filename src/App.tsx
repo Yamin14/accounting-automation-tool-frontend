@@ -62,7 +62,7 @@ const App = () => {
         const response = await api.get('/users/me');
         setUser(response.data.user);
 
-        const res = await api.get('/');
+        const res = await api.get('/initial-setup');
         setAccounts(res.data.accounts);
         setActiveFinancialYear(res.data.financialYear);
         setSelectedFinancialYear(res.data.financialYear);
