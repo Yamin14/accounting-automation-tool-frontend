@@ -53,7 +53,8 @@ const ProfitLossStatement = () => {
         map[sub][accName] = (map[sub][accName] || 0) + amount;
 
         if (sub === "Revenue") totals.Revenue += amount;
-        // ... handle Interest Income, Non-op, etc.
+        if (sub.toLowerCase().includes("non")) totals.NonOperatingRevenue += amount;
+        if (sub.includes("Interest Income")) totals.FinanceIncome += amount;
       }
 
       // 2. Debit to Revenue → Reduce revenue directly (returns, corrections, reversals)
