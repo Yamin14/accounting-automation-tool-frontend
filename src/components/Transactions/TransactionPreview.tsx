@@ -3,8 +3,15 @@ import { CheckCircle, Save, Edit3 } from "lucide-react";
 import useEntryStore from "../../store/entryStore";
 import useAccountingStore from "../../store/accountingStore";
 
+interface EntryData {
+  debitAccount: string;
+  creditAccount: string;
+  description: string;
+  amount: number;
+}
+
 interface Props {
-  onSave: () => void;
+  onSave: (finalEntry: EntryData) => void;
 }
 
 const TransactionPreview: React.FC<Props> = ({ onSave }) => {
@@ -25,7 +32,7 @@ const TransactionPreview: React.FC<Props> = ({ onSave }) => {
 
     if (debitAccount && creditAccount && description && amount > 0) {
       setEntry(debitAccount, creditAccount, description, amount);
-      onSave();
+      onSave({debitAccount, creditAccount, description, amount});
     }
   };
 

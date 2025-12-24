@@ -33,18 +33,18 @@ const TransactionInput: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!entry) return;
+  const handleSave = async (finalEntry: {debitAccount: string, creditAccount: string, description: string, amount: number}) => {
+    if (!finalEntry) return;
     try {
       setLoading(true);
-      const valid = validateEntry(entry, accounts.map(acc => acc.accountName));
+      const valid = validateEntry(finalEntry, accounts.map(acc => acc.accountName));
       if (!valid.valid) {
         addAlert(`Validation Error: ${valid.message}`, "error");
         return;
       }
 
       const date = new Date().toISOString();
-      const res = await api.post("/journal-entries", { ...entry, date });
+      const res = await api.post("/journal-entries", { ...finalEntry, date });
       setAccounts(res.data.accounts);
       setJournalEntries(res.data.entries);
       
@@ -105,7 +105,7 @@ const TransactionInput: React.FC = () => {
         </div>
       )}
 
-      {entry && <TransactionPreview onSave={handleSave} />}
+      {entry && <TransactionPreview onSave={(finalEntry) => handleSave(finalEntry)} />}
     </div>
   );
 };
