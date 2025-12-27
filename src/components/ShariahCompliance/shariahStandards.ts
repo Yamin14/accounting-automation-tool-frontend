@@ -79,7 +79,7 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
     id: 'secMalaysia',
     name: 'Securities Commission Malaysia',
     referenceName: 'Shariah-Compliant Securities (SAC Malaysia)',
-    referenceUrl: 'https://www.sc.com.my/regulation/guidelines/islamic-capital-market/shariah-compliant-securities',
+    referenceUrl: 'https://www.sc.com.my/development/icm/shariah-compliant-securities/shariah-compliant-securities-screening-methodology',
     businessActivityRules: [
       '5% benchmark: Conventional banking, insurance, gambling, liquor, pork, tobacco, interest income, non-halal entertainment',
       '20% benchmark: Share trading, stockbroking, cinema, rental from non-compliant activities',
@@ -136,12 +136,22 @@ export const shariahStandards: Record<ShariahStandardKey, ShariahStandard> = {
         pass: marketCap != null && t.accountsReceivable != null ? (t.accountsReceivable / marketCap) <= 0.49 : true,
         na: marketCap == null || t.accountsReceivable == null,
       },
+      {
+        name: 'Non-Compliant Income to Total Revenue',
+        formula: 'Non-Compliant Income ÷ Total Revenue',
+        threshold: '< 5%',
+        value: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) * 100 : null,
+        pass: t.interestIncome !== undefined && t.revenue ? (t.interestIncome / t.revenue) < 0.05 : true,
+        na: !(t.interestIncome !== undefined && t.revenue),
+        description: 'Using Interest Income as proxy for non-compliant income',
+      }
     ],
   },
   msci: {
     id: 'msci',
     name: 'MSCI Islamic Index',
     referenceName: 'MSCI Islamic Index Series Methodology',
+    referenceUrl: 'https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjLsqHJ59yRAxXpgv0HHf3HCh0QFnoECBgQAQ&url=https%3A%2F%2Fwww.msci.com%2Findex%2Fmethodology%2Flatest%2FIslamic&usg=AOvVaw0k-teHb5YAaPcbx19Ltck8&opi=89978449',
     financialCriteria: (t: ReturnType<typeof calculateTotals>) => [
       {
         name: 'Total Debt to Total Assets',
