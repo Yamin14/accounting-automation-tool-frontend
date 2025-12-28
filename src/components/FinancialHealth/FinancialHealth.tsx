@@ -131,7 +131,7 @@ const FinancialHealth = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Overall Financial Health</h2>
-              <p className="text-gray-600 mt-1">Based on profitability, liquidity, leverage, and efficiency</p>
+              <p className="text-gray-600 mt-1">Based on profitability, liquidity, leverage, return, and efficiency</p>
             </div>
             <div className={`p-5 rounded-2xl ${status.bg}`}>
               <StatusIcon className={`h-10 w-10 ${status.color}`} />
